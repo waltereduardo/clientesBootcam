@@ -1,6 +1,6 @@
 package com.nttdata.bootcam.banca.consulta.client.dto;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+
 
 import lombok.Data;
 

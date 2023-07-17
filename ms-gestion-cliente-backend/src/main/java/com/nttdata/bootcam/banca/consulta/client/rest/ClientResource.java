@@ -1,6 +1,6 @@
 package com.nttdata.bootcam.banca.consulta.client.rest;
 
-import org.apache.catalina.util.ToStringUtil;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -23,8 +23,10 @@ import com.nttdata.bootcam.banca.consulta.client.repository.ClientRepository;
 import com.nttdata.bootcam.banca.consulta.client.repository.dao.AccountClientDAO;
 import com.nttdata.bootcam.banca.consulta.client.repository.dao.ClientDAO;
 import com.nttdata.bootcam.banca.consulta.client.repository.dao.ClientProductDAO;
+import com.nttdata.bootcam.banca.consulta.client.service.ClientService;
 
 import io.micrometer.common.util.StringUtils;
+import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -33,6 +35,9 @@ import reactor.core.publisher.Mono;
 @RequestMapping("/client")
 @RequiredArgsConstructor
 public class ClientResource {
+
+	@Autowired
+	private ClientService clientService;
 
 	@Autowired
 	private ClientRepository clientRepository;
@@ -46,12 +51,15 @@ public class ClientResource {
 	// 1. start of CRUD
 	@GetMapping
 	public Flux getClienteAll(ClientResponse clientResponse) {
-		return clientRepository.findAll().map(this::fromClient);
+//		return clientRepository.findAll().map(this::fromClient);
+//		ClientDAO cmh=new ClientDAO();
+		return clientService.getClientAll().map(this::fromClient);
 	}
 
 	@GetMapping("/{id}")
 	public Mono<ClientResponse> findClientById(@PathVariable String id) {
-		return clientRepository.findById(id).map(this::fromClient);
+//		return clientRepository.findById(id).map(this::fromClient);
+		return clientService.findById(id).map(this::fromClient);
 	}
 
 	@PostMapping
@@ -120,16 +128,15 @@ public class ClientResource {
 										// ---- savings account
 										// ------Register the product
 										// Many account
-											AccountClientResponse acr = new AccountClientResponse();
-											acr.setIdClient(cliente.getId());
-											acr.setIdProduct(api.getId());
-											acr.setTypeProduct("3");// PLAZO FIJO
-											Mono<AccountClientDAO> savedAccount = accountClientRepository
-													.save(this.fromAccountClientResponseToAccountClientDAO(acr));
-											savedAccount.block();
-										
+										AccountClientResponse acr = new AccountClientResponse();
+										acr.setIdClient(cliente.getId());
+										acr.setIdProduct(api.getId());
+										acr.setTypeProduct("3");// PLAZO FIJO
+										Mono<AccountClientDAO> savedAccount = accountClientRepository
+												.save(this.fromAccountClientResponseToAccountClientDAO(acr));
+										savedAccount.block();
 
-									}else {
+									} else {
 										System.out.println("----------------other-----------------");
 									}
 
@@ -138,37 +145,39 @@ public class ClientResource {
 					} else if (cliente.getTypeClient().compareTo("2") == 0) {
 						// --------- IS BUSINESS CLIENT ----------
 						accountClientRepository.findByIdClient(cliente.getId())
-						.map(this::fromAccountClientDAOToAccountClient).subscribe(cli -> {
-							if (api.getTypeProduct() != null && api.getTypeProduct().compareTo("1") == 0
-									&& api.getDetTypeProduct().compareTo("1") == 0) {
-								// ------Troungh exception
-								if (StringUtils.isEmpty(cli.getTypeProduct())) {
-									System.out.println("--USTED NO CALIFICA PARA UNA CUENTA DE AHORRO --");
-									throw new RuntimeException("--USTED NO CALIFICA PARA UNA CUENTA DE AHORRO --");
-								}
+								.map(this::fromAccountClientDAOToAccountClient).subscribe(cli -> {
+									if (api.getTypeProduct() != null && api.getTypeProduct().compareTo("1") == 0
+											&& api.getDetTypeProduct().compareTo("1") == 0) {
+										// ------Troungh exception
+										if (StringUtils.isEmpty(cli.getTypeProduct())) {
+											System.out.println("--USTED NO CALIFICA PARA UNA CUENTA DE AHORRO --");
+											throw new RuntimeException(
+													"--USTED NO CALIFICA PARA UNA CUENTA DE AHORRO --");
+										}
 
-							} else if (api.getTypeProduct() != null && api.getTypeProduct().compareTo("1") == 0
-									&& api.getDetTypeProduct().compareTo("2") == 0) {
-								// ------Register the product
-								// Many account
-									AccountClientResponse acr = new AccountClientResponse();
-									acr.setIdClient(cliente.getId());
-									acr.setIdProduct(api.getId());
-									acr.setTypeProduct("2");// CUENTA CORRIENTE
-									Mono<AccountClientDAO> savedAccount = accountClientRepository
-											.save(this.fromAccountClientResponseToAccountClientDAO(acr));
-									savedAccount.block();
+									} else if (api.getTypeProduct() != null && api.getTypeProduct().compareTo("1") == 0
+											&& api.getDetTypeProduct().compareTo("2") == 0) {
+										// ------Register the product
+										// Many account
+										AccountClientResponse acr = new AccountClientResponse();
+										acr.setIdClient(cliente.getId());
+										acr.setIdProduct(api.getId());
+										acr.setTypeProduct("2");// CUENTA CORRIENTE
+										Mono<AccountClientDAO> savedAccount = accountClientRepository
+												.save(this.fromAccountClientResponseToAccountClientDAO(acr));
+										savedAccount.block();
 
-							} else if (api.getTypeProduct() != null && api.getTypeProduct().compareTo("1") == 0
-									&& api.getDetTypeProduct().compareTo("3") == 0) {
-								//------Troungh exception
-								System.out.println("--USTED NO CALIFICA PARA PLAZO FIJO --");							
-							}else {
-								System.out.println("----------------other-----------------");
-							}
+									} else if (api.getTypeProduct() != null && api.getTypeProduct().compareTo("1") == 0
+											&& api.getDetTypeProduct().compareTo("3") == 0) {
+										// ------Troungh exception
+										System.out.println("--USTED NO CALIFICA PARA PLAZO FIJO --");
+										throw new RuntimeException("--USTED NO CALIFICA PARA UNA CUENTA DE AHORRO --");
+									} else {
+										System.out.println("----------------other-----------------");
+									}
 
-						});
-						
+								});
+
 					}
 				}
 			});
