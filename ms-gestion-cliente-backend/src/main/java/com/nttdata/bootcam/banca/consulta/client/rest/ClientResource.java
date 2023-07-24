@@ -1,6 +1,5 @@
 package com.nttdata.bootcam.banca.consulta.client.rest;
 
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -13,10 +12,15 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 import com.nttdata.bootcam.banca.consulta.client.dto.AccountClient;
 import com.nttdata.bootcam.banca.consulta.client.dto.AccountClientResponse;
+import com.nttdata.bootcam.banca.consulta.client.dto.Client;
 import com.nttdata.bootcam.banca.consulta.client.dto.ClientCreateProduc;
 import com.nttdata.bootcam.banca.consulta.client.dto.ClientProductResponse;
 import com.nttdata.bootcam.banca.consulta.client.dto.ClientResponse;
 import com.nttdata.bootcam.banca.consulta.client.dto.Producto;
+import com.nttdata.bootcam.banca.consulta.client.dto.ProductoCatalogoKafka;
+import com.nttdata.bootcam.banca.consulta.client.infraestructure.ClientServiceKafka;
+import com.nttdata.bootcam.banca.consulta.client.infraestructure.KafkaConsumerService;
+import com.nttdata.bootcam.banca.consulta.client.infraestructure.KafkaProducerService;
 import com.nttdata.bootcam.banca.consulta.client.repository.AccountClientRepository;
 import com.nttdata.bootcam.banca.consulta.client.repository.ClientProductRepository;
 import com.nttdata.bootcam.banca.consulta.client.repository.ClientRepository;
@@ -26,7 +30,6 @@ import com.nttdata.bootcam.banca.consulta.client.repository.dao.ClientProductDAO
 import com.nttdata.bootcam.banca.consulta.client.service.ClientService;
 
 import io.micrometer.common.util.StringUtils;
-import io.swagger.v3.oas.annotations.Operation;
 import lombok.RequiredArgsConstructor;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -48,6 +51,13 @@ public class ClientResource {
 
 	private final WebClient webClient;
 
+//	@Autowired
+//	private KafkaProducerService producerService;
+//	@Autowired
+//	private KafkaConsumerService kafkaConsumerService;
+	@Autowired
+	private ClientServiceKafka clientServicek;
+
 	// 1. start of CRUD
 	@GetMapping
 	public Flux getClienteAll(ClientResponse clientResponse) {
@@ -60,6 +70,17 @@ public class ClientResource {
 	public Mono<ClientResponse> findClientById(@PathVariable String id) {
 //		return clientRepository.findById(id).map(this::fromClient);
 		return clientService.findById(id).map(this::fromClient);
+	}
+
+	@GetMapping("typeClient/{numberDocumento}")
+	public Mono<ClientResponse> findTypeClientByNumberDocument(@PathVariable String numberDocumento) {
+		return clientService.typeClient(numberDocumento).map(this::fromClient).defaultIfEmpty(new ClientResponse())
+				.map(cl -> {
+					if (cl.getTypeClient() == null) {
+						cl.setTypeClient("No ha registrado su tipo de cliente");
+					}
+					return cl;
+				});
 	}
 
 	@PostMapping
@@ -93,7 +114,7 @@ public class ClientResource {
 				if (typeClient != null) {
 					if (cliente.getTypeClient().compareTo("1") == 0) {
 						// ------- IS UNIQUE CLIENT--------------
-						accountClientRepository.findByIdClient(cliente.getId())
+						accountClientRepository.findByIdClient(clientCreateProduc.getIdClient())
 								.map(this::fromAccountClientDAOToAccountClient).subscribe(cli -> {
 									if (api.getTypeProduct() != null && api.getTypeProduct().compareTo("1") == 0
 											&& api.getDetTypeProduct().compareTo("1") == 0) {
@@ -101,7 +122,7 @@ public class ClientResource {
 										// ------Register the product
 										if (StringUtils.isEmpty(cli.getTypeProduct())) {
 											AccountClientResponse acr = new AccountClientResponse();
-											acr.setIdClient(cliente.getId());
+											acr.setIdClient(clientCreateProduc.getId());
 											acr.setIdProduct(api.getId());
 											acr.setTypeProduct("1");// AHORRO
 											Mono<AccountClientDAO> savedAccount = accountClientRepository
@@ -115,7 +136,7 @@ public class ClientResource {
 										// ------Register the product
 										if (StringUtils.isEmpty(cli.getTypeProduct())) {
 											AccountClientResponse acr = new AccountClientResponse();
-											acr.setIdClient(cliente.getId());
+											acr.setIdClient(clientCreateProduc.getId());
 											acr.setIdProduct(api.getId());
 											acr.setTypeProduct("2");// CUENTA CORRIENTE
 											Mono<AccountClientDAO> savedAccount = accountClientRepository
@@ -129,7 +150,7 @@ public class ClientResource {
 										// ------Register the product
 										// Many account
 										AccountClientResponse acr = new AccountClientResponse();
-										acr.setIdClient(cliente.getId());
+										acr.setIdClient(clientCreateProduc.getId());
 										acr.setIdProduct(api.getId());
 										acr.setTypeProduct("3");// PLAZO FIJO
 										Mono<AccountClientDAO> savedAccount = accountClientRepository
@@ -144,7 +165,7 @@ public class ClientResource {
 
 					} else if (cliente.getTypeClient().compareTo("2") == 0) {
 						// --------- IS BUSINESS CLIENT ----------
-						accountClientRepository.findByIdClient(cliente.getId())
+						accountClientRepository.findByIdClient(clientCreateProduc.getId())
 								.map(this::fromAccountClientDAOToAccountClient).subscribe(cli -> {
 									if (api.getTypeProduct() != null && api.getTypeProduct().compareTo("1") == 0
 											&& api.getDetTypeProduct().compareTo("1") == 0) {
@@ -160,7 +181,7 @@ public class ClientResource {
 										// ------Register the product
 										// Many account
 										AccountClientResponse acr = new AccountClientResponse();
-										acr.setIdClient(cliente.getId());
+										acr.setIdClient(clientCreateProduc.getId());
 										acr.setIdProduct(api.getId());
 										acr.setTypeProduct("2");// CUENTA CORRIENTE
 										Mono<AccountClientDAO> savedAccount = accountClientRepository
@@ -187,15 +208,39 @@ public class ClientResource {
 	}
 
 // end register product by client	
-	private ClientResponse fromClient(ClientDAO clientDao) {
-		ClientResponse cResponse = new ClientResponse();
-		cResponse.setId(clientDao.getId());
-		cResponse.setTypeDocument(clientDao.getTypeDocument());
-		cResponse.setNumberDocument(clientDao.getNumberDocument());
-		cResponse.setTypeClient(clientDao.getTypeClient());
-		cResponse.setNameAll(clientDao.getNameAll());
+	//3. Solicitud del catalogo de productos
+	@PostMapping("/send")
+	public ProductoCatalogoKafka sendMessage(@RequestBody ProductoCatalogoKafka message) {
+//		producerService.sendCatalogRequest(message);
+		return this.clientServicek.save(message) ;
+	}
+	
+	private ClientResponse fromClient(ClientDAO cResponse) {
+		ClientResponse cResp = new ClientResponse();
+		Client cl = new Client();
+		cl.setId(cResponse.getId());
+		cResp.setNameAll(cResponse.getNameAll());
+		cResp.setNumberDocument(cResponse.getNumberDocument());
+		if ("1".equals(cResponse.getTypeClient())) {
+			cResp.setTypeClient(cResponse.getTypeClient());
+			if (cResponse.getTypeClient() != null)
+				cl.setTypeClient("CLIENTE PERSONAL");
+		} else {
+			if (cResponse.getTypeClient() != null)
+				cl.setTypeClient("CLIENTE EMPRESARIAL");
 
-		return cResponse;
+			cResp.setTypeClient(cResponse.getTypeClient());
+		}
+		cResp.setTypeClient(cResponse.getTypeClient());
+		cResp.setTypeDocument(cResponse.getTypeDocument());
+		cl.setClientResponse(cResp);
+//		cResponse.setTypeDocument(clientDao.getTypeDocument());
+//		cResponse.setNumberDocument(clientDao.getNumberDocument());
+//		cResponse.setTypeClient(clientDao.getTypeClient());
+//		cResponse.setNameAll(clientDao.getNameAll());
+
+		System.out.println("LLEGANDO AL FROMCLIENT");
+		return cl;
 	}
 
 	private ClientDAO fromClientResponseToClienteDao(ClientResponse clientResponse) {
@@ -224,10 +269,17 @@ public class ClientResource {
 
 	private AccountClient fromAccountClientDAOToAccountClient(AccountClientDAO accountClientDAO) {
 		AccountClient acli = new AccountClient();
+		AccountClientResponse cliRp = new AccountClientResponse();
 		acli.setId(accountClientDAO.getId());
-		acli.setIdClient(accountClientDAO.getIdClient());
-		acli.setIdProduct(accountClientDAO.getIdProduct());
-		acli.setTypeProduct(accountClientDAO.getTypeProduct());
+		cliRp.setIdClient(accountClientDAO.getIdClient());
+		cliRp.setIdProduct(accountClientDAO.getIdProduct());
+		cliRp.setTypeProduct(accountClientDAO.getTypeProduct());
+		acli.setAccountClientResponse(cliRp);
+		System.out.println("INGRESANDO");
+//		acli.setId(accountClientDAO.getId());
+//		acli.setIdClient(accountClientDAO.getIdClient());
+//		acli.setIdProduct(accountClientDAO.getIdProduct());
+//		acli.setTypeProduct(accountClientDAO.getTypeProduct());
 		return acli;
 	}
 

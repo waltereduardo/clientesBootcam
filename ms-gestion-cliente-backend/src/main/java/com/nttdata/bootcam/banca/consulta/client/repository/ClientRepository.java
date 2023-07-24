@@ -4,6 +4,10 @@ import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
 
 import com.nttdata.bootcam.banca.consulta.client.repository.dao.ClientDAO;
 
-public interface ClientRepository extends ReactiveMongoRepository<ClientDAO, String>{
+import reactor.core.publisher.Mono;
 
+public interface ClientRepository extends ReactiveMongoRepository<ClientDAO, String>{
+	
+	Mono<ClientDAO> findByNumberDocument(String dni);
+	
 }

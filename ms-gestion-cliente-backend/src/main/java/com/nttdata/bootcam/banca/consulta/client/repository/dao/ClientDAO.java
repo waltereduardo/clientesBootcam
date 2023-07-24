@@ -3,6 +3,9 @@ package com.nttdata.bootcam.banca.consulta.client.repository.dao;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import com.nttdata.bootcam.banca.consulta.client.dto.Client;
+import com.nttdata.bootcam.banca.consulta.client.dto.ClientResponse;
+
 import lombok.Data;
 
 @Data
