@@ -1,0 +1,6 @@
+projectKey=ProyectoClientes
+serverUrl=http://localhost:9001
+serverVersion=10.1.0.73491
+dashboardUrl=http://localhost:9001/dashboard?id=ProyectoClientes
+ceTaskId=AYmti9klzLdPppFu7-uo
+ceTaskUrl=http://localhost:9001/api/ce/task?id=AYmti9klzLdPppFu7-uo
