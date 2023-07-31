@@ -13,9 +13,8 @@ import springfox.documentation.oas.annotations.EnableOpenApi;
 
 
 
-
-@SpringBootApplication
-@EnableMongoRepositories("com.nttdata.bootcam.banca.consulta.client.repository") 
+@SpringBootApplication    
+//@EnableMongoRepositories("com.nttdata.bootcam.banca.consulta.client.repository") 
 @ComponentScan("com.nttdata.bootcam.banca.consulta.client") 
 @EnableOpenApi
 @OpenAPIDefinition(info = @Info(

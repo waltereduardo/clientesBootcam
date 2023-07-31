@@ -17,10 +17,9 @@ import com.nttdata.bootcam.banca.consulta.client.dto.ClientCreateProduc;
 import com.nttdata.bootcam.banca.consulta.client.dto.ClientProductResponse;
 import com.nttdata.bootcam.banca.consulta.client.dto.ClientResponse;
 import com.nttdata.bootcam.banca.consulta.client.dto.Producto;
-import com.nttdata.bootcam.banca.consulta.client.dto.ProductoCatalogoKafka;
+import com.nttdata.bootcam.banca.consulta.client.dto.event.BuyProductEvent;
+import com.nttdata.bootcam.banca.consulta.client.dto.event.ClientCatalogEvent;
 import com.nttdata.bootcam.banca.consulta.client.infraestructure.ClientServiceKafka;
-import com.nttdata.bootcam.banca.consulta.client.infraestructure.KafkaConsumerService;
-import com.nttdata.bootcam.banca.consulta.client.infraestructure.KafkaProducerService;
 import com.nttdata.bootcam.banca.consulta.client.repository.AccountClientRepository;
 import com.nttdata.bootcam.banca.consulta.client.repository.ClientProductRepository;
 import com.nttdata.bootcam.banca.consulta.client.repository.ClientRepository;
@@ -210,10 +209,15 @@ public class ClientResource {
 // end register product by client	
 	//3. Solicitud del catalogo de productos
 	@PostMapping("/send")
-	public ProductoCatalogoKafka sendMessage(@RequestBody ProductoCatalogoKafka message) {
-//		producerService.sendCatalogRequest(message);
-		return this.clientServicek.save(message) ;
+	public ClientCatalogEvent sendMessageCatalogo(@RequestBody ClientCatalogEvent message) {
+		return this.clientServicek.saveCatalogo(message) ;
 	}
+	//4. Solicitud de la orden de compra
+	@PostMapping("/sendCompra")
+	public BuyProductEvent sendMessageCompra(@RequestBody BuyProductEvent message) {
+		return this.clientServicek.saveOrdenCompra(message) ;
+	}
+	
 	
 	private ClientResponse fromClient(ClientDAO cResponse) {
 		ClientResponse cResp = new ClientResponse();

@@ -1,5 +1,30 @@
+server:
+  port: 8081
+
+spring:
+  data:
+    mongodb:
+      uri: mongodb+srv://bootcam:akOU0Wt6DZbORQrD@cluster0.o44govo.mongodb.net/bootcam?retryWrites=true&w=majority
+    mongodbkafka:
+      uri: mongodb+srv://usermensaje:3aUsSD74IsQsa4LB@clusterkafka.aycs0q6.mongodb.net/mensajeria?retryWrites=true&w=majority
+  
+  kafka:
+    consumer:
+      group-id: my-group
+      bootstrap-servers: localhost:9092
+    producer:
+      properties:
+          spring:
+             json:
+                trusted:
+                    packages=com.nttdata.bootcam.banca.consulta.client.infraestructure.event
+catalog-request-topic: catalog-request-topic
+order-request-topic: order-request-topic
+                         
 springdoc:
-  api-docs:
-    enabled: true
-  swagger-ui:
-    enabled: true
+    api-docs:
+      groups:
+        enabled: true
+      path: /swagger-doc/v3/api-docs
+    swagger-ui:
+      path: /swagger-doc/swagger-ui.html
