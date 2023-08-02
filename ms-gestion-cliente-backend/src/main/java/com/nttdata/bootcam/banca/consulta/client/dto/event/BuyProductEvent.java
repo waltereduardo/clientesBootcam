@@ -10,4 +10,5 @@ public class BuyProductEvent {
 	private String idProduct;
 	private int cantidad;
 	private String mensaje;
+	private String id;
 }

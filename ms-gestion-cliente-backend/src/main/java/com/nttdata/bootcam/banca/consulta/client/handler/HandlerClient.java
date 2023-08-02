@@ -30,7 +30,8 @@ public class HandlerClient {
 
 	public Mono<ServerResponse> saveClient(ServerRequest request) {
 		Mono<ClientDAO> clientMono = request.bodyToMono(ClientDAO.class);
-		Mono<String> saveResponse = clientMono.map(dto -> dto.getId() + ":" + dto.getNameAll()+":"+dto.getNumberDocument()+":"+dto.getTypeDocument()+":"+dto.getTypeClient());
+		Mono<String> saveResponse = clientMono.map(dto -> dto.getId() + ":" + dto.getNameAll() + ":"
+				+ dto.getNumberDocument() + ":" + dto.getTypeDocument() + ":" + dto.getTypeClient());
 		return ServerResponse.ok().body(saveResponse, String.class);
 	}
 

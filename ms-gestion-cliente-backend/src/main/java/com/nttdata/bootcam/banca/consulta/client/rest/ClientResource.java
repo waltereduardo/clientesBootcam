@@ -207,18 +207,18 @@ public class ClientResource {
 	}
 
 // end register product by client	
-	//3. Solicitud del catalogo de productos
+	// 3. Solicitud del catalogo de productos
 	@PostMapping("/send")
 	public ClientCatalogEvent sendMessageCatalogo(@RequestBody ClientCatalogEvent message) {
-		return this.clientServicek.saveCatalogo(message) ;
+		return this.clientServicek.saveCatalogo(message);
 	}
-	//4. Solicitud de la orden de compra
+
+	// 4. Solicitud de la orden de compra
 	@PostMapping("/sendCompra")
 	public BuyProductEvent sendMessageCompra(@RequestBody BuyProductEvent message) {
-		return this.clientServicek.saveOrdenCompra(message) ;
+		return this.clientServicek.saveOrdenCompra(message);
 	}
-	
-	
+
 	private ClientResponse fromClient(ClientDAO cResponse) {
 		ClientResponse cResp = new ClientResponse();
 		Client cl = new Client();
@@ -238,12 +238,7 @@ public class ClientResource {
 		cResp.setTypeClient(cResponse.getTypeClient());
 		cResp.setTypeDocument(cResponse.getTypeDocument());
 		cl.setClientResponse(cResp);
-//		cResponse.setTypeDocument(clientDao.getTypeDocument());
-//		cResponse.setNumberDocument(clientDao.getNumberDocument());
-//		cResponse.setTypeClient(clientDao.getTypeClient());
-//		cResponse.setNameAll(clientDao.getNameAll());
 
-		System.out.println("LLEGANDO AL FROMCLIENT");
 		return cl;
 	}
 

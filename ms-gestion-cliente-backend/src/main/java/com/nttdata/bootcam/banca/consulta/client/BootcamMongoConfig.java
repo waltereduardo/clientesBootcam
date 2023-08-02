@@ -12,20 +12,19 @@ import com.mongodb.reactivestreams.client.MongoClients;
 
 @Configuration
 @EnableReactiveMongoRepositories(basePackages = "com.nttdata.bootcam.banca.consulta.client.repository", reactiveMongoTemplateRef = "bootcamReactiveMongoTemplate")
-public class BootcamMongoConfig {                
+public class BootcamMongoConfig {
 
-    @Value("${spring.data.mongodb.uri}")
-    private String bootcamMongoUri;
-    
-    @Primary
-    @Bean
-    public MongoClient bootcamMongoClient() {
-        return MongoClients.create(bootcamMongoUri);
-    }
+	@Value("${spring.data.mongodb.uri}")
+	private String bootcamMongoUri;
 
-    @Bean
-    public ReactiveMongoTemplate bootcamReactiveMongoTemplate() {
-        return new ReactiveMongoTemplate(bootcamMongoClient(), "bootcam"); 
-    }
+	@Primary
+	@Bean
+	public MongoClient bootcamMongoClient() {
+		return MongoClients.create(bootcamMongoUri);
+	}
+
+	@Bean
+	public ReactiveMongoTemplate bootcamReactiveMongoTemplate() {
+		return new ReactiveMongoTemplate(bootcamMongoClient(), "bootcam");
+	}
 }
-

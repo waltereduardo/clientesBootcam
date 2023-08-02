@@ -7,6 +7,6 @@ import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class ClientCreatedEventCompra extends Event<BuyProductEvent>{
+public class ClientCreatedEventCompra extends Event<BuyProductEvent> {
 	private String topico;
 }

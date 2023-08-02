@@ -11,8 +11,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public abstract class Event<T> {
-  private String id;
-  private Date date;
-  private EventType type;
-  private T data;
+	private String id;
+	private Date date;
+	private EventType type;
+	private T data;
 }

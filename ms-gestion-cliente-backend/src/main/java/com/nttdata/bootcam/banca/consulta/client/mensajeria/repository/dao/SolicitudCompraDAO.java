@@ -8,10 +8,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import lombok.Data;
 
 @Data
-@Document(collection = "solicitud-catalogo")
-//@Document("solicitud-catalogo")
-public class SolicitudCatalogoDAO {
-
+@Document(collection = "solicitud-compra")
+public class SolicitudCompraDAO {
 	@Id
 	private String id;
 	private String idMensaje;
@@ -20,5 +18,4 @@ public class SolicitudCatalogoDAO {
 	private String idCliente;
 	private Date dateMensaje;
 	private String topico;
-
 }

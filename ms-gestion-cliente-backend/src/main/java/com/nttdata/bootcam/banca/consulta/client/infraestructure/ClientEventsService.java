@@ -14,11 +14,12 @@ import com.nttdata.bootcam.banca.consulta.client.infraestructure.event.ClientCre
 import com.nttdata.bootcam.banca.consulta.client.infraestructure.event.Event;
 import com.nttdata.bootcam.banca.consulta.client.infraestructure.event.EventType;
 import com.nttdata.bootcam.banca.consulta.client.mensajeria.repository.dao.SolicitudCatalogoDAO;
+import com.nttdata.bootcam.banca.consulta.client.mensajeria.repository.dao.SolicitudCompraDAO;
 import com.nttdata.bootcam.banca.consulta.client.service.ClientMessageService;
-import com.nttdata.bootcam.banca.consulta.client.util.Constantes;
 import com.nttdata.bootcam.banca.consulta.client.util.JsonUtil;
 
 import jakarta.annotation.PostConstruct;
+import reactor.core.publisher.Flux;
 
 import org.springframework.beans.factory.annotation.Value;
 
@@ -45,13 +46,15 @@ public class ClientEventsService {
 	public void publishCatalogo(ClientCatalogEvent client) {
 		ClientCreatedEvent selected = new ClientCreatedEvent();
 		selected.setData(client);
-//		selected.setId(UUID.randomUUID().toString());
-		selected.setId("1222d406-3635-4213-8774-b11507f34afd");
-		
+		selected.setId(UUID.randomUUID().toString());
 		selected.setType(EventType.CATALOGO);
 		selected.setDate(new Date());
 		selected.setTopico("catalog-request-topic");
-
+		System.out.println("<<ClientCreatedEvent>>" + selected.getData());
+		System.out.println("<<ClientCreatedEvent>>" + selected.getId());///////// 736f97af-68f4-4f5a-8c54-ed075e25ef7a
+		System.out.println("<<ClientCreatedEvent>>" + selected.getType());///////////// CATALOGO
+		System.out.println("<<ClientCreatedEvent>>" + selected.getDate());
+		System.out.println("<<ClientCreatedEvent>>" + selected.getTopico());
 		SolicitudCatalogoDAO scdao = new SolicitudCatalogoDAO();
 		scdao.setDataMensaje(JsonUtil.convertirObjetoAJson(client));
 		scdao.setDateMensaje(selected.getDate());
@@ -60,40 +63,29 @@ public class ClientEventsService {
 		scdao.setTopico(selected.getTopico());
 		scdao.setTypeMensaje(selected.getType().name());
 		scdao.setId(selected.getId());
-		System.out.println("BUSQUEMOS EN LA BD :" + selected.getId());
-		clientMessageService.getIdMensaje(selected.getId())
-				.filter(rdao -> rdao.getIdMensaje() != null && !rdao.getIdMensaje().isEmpty())
-				.switchIfEmpty(clientMessageService.saveMessageCatalog(scdao)).subscribe(result -> {
+		System.out.println("<<SolicitudCatalogoDAO>>" + scdao.getDataMensaje());
+		System.out.println("<<SolicitudCatalogoDAO>>" + scdao.getDateMensaje());
+		System.out.println("<<SolicitudCatalogoDAO>>" + scdao.getIdCliente());
+		System.out.println("<<SolicitudCatalogoDAO>>" + scdao.getIdMensaje());///////// 736f97af-68f4-4f5a-8c54-ed075e25ef7a
+		System.out.println("<<SolicitudCatalogoDAO>>" + scdao.getTopico());
+		System.out.println("<<SolicitudCatalogoDAO>>" + scdao.getTypeMensaje());//////////// CATALOGO
+		System.out.println("<<SolicitudCatalogoDAO>>" + scdao.getId());//////// 736f97af-68f4-4f5a-8c54-ed075e25ef7a
+
+		clientMessageService.getIdMensaje(scdao.getTypeMensaje())
+				.filter(solicitud -> selected.getId().equals(solicitud.getIdMensaje())).collectList()
+				.flatMapMany(filteredSolicitudes -> {
+					if (filteredSolicitudes.isEmpty()) {
+						return clientMessageService.saveMessageCatalog(scdao).flux();
+					} else {
+						System.out.println("---MENSAJE YA EXISTE EN EL TOPICO---");
+						return Flux.empty();
+					}
+				}).doOnNext(result -> {
 					if (result != null) {
 						this.producer.send(topicCustomer, selected);
 						System.out.println("---PASANDO LA PUBLICACION---" + result);
-					} else {
-						System.out.println("---MENSAJE YA EXISTE EN EL TOPICO---");
 					}
-//			System.out.println("ttttttttttt:" + rdao.getIdMensaje());
-//			if (rdao.getIdMensaje().isEmpty()) {
-//				clientMessageService.saveMessageCatalog(scdao).subscribe(result -> {
-//					this.producer.send(topicCustomer, selected);
-//					System.out.println("---PASANDO LA PUBLICACION---" + result);
-//				}, error -> {
-//					System.out.println("ERROR" + error.getMessage());
-//				});
-//
-//			} else {
-//				System.out.println("---MENSAJE YA EXISTE EN EL TOPICO---");
-//			}
-				}, error -> {
-					System.out.println("ERROR" + error.getMessage());
-				});
-
-//		clientMessageService.saveMessageCatalog(scdao)
-//		.subscribe(result->{
-//			this.producer.send(topicCustomer, selected);
-//			System.out.println("---PASANDO LA PUBLICACION---"  + result) ;
-//		}, error->{
-//			System.out.println("ERROR"  + error.getMessage()) ;
-//		} );
-//		
+				}).subscribe();
 
 	}
 
@@ -101,10 +93,45 @@ public class ClientEventsService {
 		ClientCreatedEventCompra saved = new ClientCreatedEventCompra();
 		saved.setData(client);
 		saved.setId(UUID.randomUUID().toString());
-		saved.setType(EventType.CREATED);
+		saved.setType(EventType.COMPRA);
 		saved.setDate(new Date());
 		saved.setTopico("order-request-topic");
-		if (Constantes.MSG_COMPRA.equals(client.getMensaje()))
-			this.producer.send(topicCustomerOrder, saved);
+		System.out.println("<<ClientCreatedEvent>>" + saved.getData());
+		System.out.println("<<ClientCreatedEvent>>" + saved.getId());///////// 736f97af-68f4-4f5a-8c54-ed075e25ef7a
+		System.out.println("<<ClientCreatedEvent>>" + saved.getType());///////////// COMPRA
+		System.out.println("<<ClientCreatedEvent>>" + saved.getDate());
+		System.out.println("<<ClientCreatedEvent>>" + saved.getTopico());
+		SolicitudCompraDAO scdao = new SolicitudCompraDAO();
+		scdao.setDataMensaje(JsonUtil.convertirObjetoAJson(client));
+		scdao.setDateMensaje(saved.getDate());
+		scdao.setIdCliente(client.getId());
+		scdao.setIdMensaje(saved.getId());
+		scdao.setTopico(saved.getTopico());
+		scdao.setTypeMensaje(saved.getType().name());
+		scdao.setId(saved.getId());
+		System.out.println("<<SolicitudCatalogoDAO>>" + scdao.getDataMensaje());
+		System.out.println("<<SolicitudCatalogoDAO>>" + scdao.getDateMensaje());
+		System.out.println("<<SolicitudCatalogoDAO>>" + scdao.getIdCliente());
+		System.out.println("<<SolicitudCatalogoDAO>>" + scdao.getIdMensaje());///////// 736f97af-68f4-4f5a-8c54-ed075e25ef7a
+		System.out.println("<<SolicitudCatalogoDAO>>" + scdao.getTopico());
+		System.out.println("<<SolicitudCatalogoDAO>>" + scdao.getTypeMensaje());//////////// CATALOGO
+		System.out.println("<<SolicitudCatalogoDAO>>" + scdao.getId());//////// 736f97af-68f4-4f5a-8c54-ed075e25ef7a
+
+		clientMessageService.getIdMensajeCompra(scdao.getTypeMensaje())
+				.filter(solici -> saved.getId().equals(solici.getIdMensaje())).collectList()
+				.flatMapMany(filteredsoli -> {
+					if (filteredsoli.isEmpty()) {
+						return clientMessageService.saveMessageCompra(scdao).flux();
+					} else {
+						System.out.println("- <<getIdMensajeCompra>>--MENSAJE YA EXISTE EN EL TOPICO---");
+						return Flux.empty();
+					}
+				}).doOnNext(result -> {
+					if (result != null) {
+						this.producer.send(topicCustomerOrder, saved);
+						System.out.println("--<<getIdMensajeCompra>>--PASANDO LA PUBLICACION---" + result);
+					}
+				}).subscribe();
+
 	}
 }

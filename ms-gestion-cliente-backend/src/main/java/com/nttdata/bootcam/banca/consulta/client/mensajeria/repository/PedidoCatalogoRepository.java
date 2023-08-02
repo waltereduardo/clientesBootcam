@@ -6,11 +6,6 @@ import com.nttdata.bootcam.banca.consulta.client.mensajeria.repository.dao.Solic
 
 import reactor.core.publisher.Flux;
 
-
-
 public interface PedidoCatalogoRepository extends ReactiveMongoRepository<SolicitudCatalogoDAO, String> {
 	Flux<SolicitudCatalogoDAO> findByTypeMensaje(String typeMensaje);
 }
-
-
-

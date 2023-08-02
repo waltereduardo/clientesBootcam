@@ -9,6 +9,6 @@ public class WebClientConfig {
 
 	@Bean
 	public WebClient webClient() {
-		return WebClient.create("http://localhost:8081"); // URL base de la API REST que deseas consultar
+		return WebClient.create("http://localhost:8081"); 
 	}
 }
